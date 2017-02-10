@@ -21,3 +21,4 @@ hs_err_pid*
 
 # Except library Package Files
 # !/lib/*.jar
+/bin/
