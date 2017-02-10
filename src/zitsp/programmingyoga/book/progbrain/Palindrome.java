@@ -15,14 +15,14 @@ public class Palindrome {
     public Palindrome() {
     }
     
-    private OptionalInt searchPalidrome(int begin) {
+    private static OptionalInt searchNumPalidrome(int begin) {
 //        Streamだとエラー落ちするので
 //        return IntStream.range(10, Integer.MAX_VALUE)
 //                .filter(i -> isDecPalidrome(i) && isOctPalidrome(i) && isBinPalidrome(i))
 //                .findFirst();
         int i = begin;
         while (i < Integer.MAX_VALUE) {
-            if (isDecPalidrome(i) && isOctPalidrome(i) && isBinPalidrome(i)) {
+            if (isNumPalidrome(i, 10) && isNumPalidrome(i, 8) && isNumPalidrome(i, 2)) {
                 return OptionalInt.of(i);
             } else {
                 i += 1;
@@ -30,43 +30,32 @@ public class Palindrome {
         }
         return OptionalInt.empty();
     }
-
-    private boolean isOctPalidrome(int val) {
-        return this.isPalidrome(val, 8);
-    }
     
-    private boolean isBinPalidrome(int val) {
-        return this.isPalidrome(val, 2);
-    }
-    private boolean isDecPalidrome(int val) {
-        return this.isPalidrome(val, 10);
-    }
-    
-    private boolean isPalidrome(int val, int base) {
-        if (base == 2 || base == 8 || base == 10) {
-            char nums[] = this.numToString(val, base).toCharArray();
-            return IntStream.range(0, nums.length / 2).allMatch(i -> nums[i] == nums[nums.length - 1 - i]);
-        } else {
-            return false;
+    private static boolean isNumPalidrome(int val, int base) {
+        String str = null;
+        switch (base) {
+        case 10:
+            str = Integer.toString(val);
+            break;
+        case 16:
+            str = Integer.toHexString(val);
+            break;
+        case 8:
+            str = Integer.toOctalString(val);
+            break;
+        case 2:
+            str = Integer.toBinaryString(val);
+            break;
+        default :
+            return false;    
         }
-    }
-    
-    private String numToString(int val, int base) {
-        if (base == 10) {
-            return Integer.toString(val);
-        } else if (base == 8) {
-            return Integer.toOctalString(val);
-        } else if (base == 2) {
-            return Integer.toBinaryString(val);
-        } else {
-            return null;
-        }
+        char nums[] = str.toCharArray();
+        return IntStream.range(0, nums.length / 2).allMatch(i -> nums[i] == nums[nums.length - 1 - i]);
     }
     
     
 	public static void main(String[] args) {
-	    Palindrome p = new Palindrome();
-	    System.out.println(p.searchPalidrome(10));
+        System.out.println(Palindrome.searchNumPalidrome(10));
 	}
 
 }
