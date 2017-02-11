@@ -1,5 +1,8 @@
 package zitsp.programmingyoga.book.progbrain;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
@@ -11,6 +14,7 @@ public class Combination {
  * "プログラマ脳を鍛える数学パズル - 増井敏克"　より
  * p.13 Q02:四則演算と一致する逆文
  * int型での走査なので基本的にdivideはうまくいかない
+ * 問題分が悪く、1の位が0なら答えは格段に増える
  * 1000 ~ 9999でなくても実行できる
  */
     
@@ -38,33 +42,98 @@ public class Combination {
     }
     
 //    組み合わせ生成器 -> 演算子で代用するので不要
-//    private List<int[]> dividedList() {
-//        List<int[]> list = new ArrayList<>();
-//        int i = 0;
-//        for (i = 0; i < String.valueOf(base).length() - 1; i++) {
-//            int a = Integer.parseInt(String.valueOf(base).substring(0, i + 1));
-//            int b = Integer.parseInt(String.valueOf(base).substring(i+1));
-//            list.addAll(divide(new int[]{a}, b));
-//        }
-//        return list;
-//    }
-//    
-//    private List<int[]> divide(int[] prefix, int val) {
-//        List<int[]> list = new ArrayList<>();
-//        int[] addArray = Arrays.copyOf(prefix, prefix.length + 1);
-//        addArray[addArray.length - 1] = val;
-//        list.add(addArray);
+    private List<int[]> dividedList() {
+        List<int[]> list = new ArrayList<>();
+        int i = 0;
+        for (i = 0; i < String.valueOf(base).length() - 1; i++) {
+            int a = Integer.parseInt(String.valueOf(base).substring(0, i + 1));
+            int b = Integer.parseInt(String.valueOf(base).substring(i+1));
+            list.addAll(divide(new int[]{a}, b));
+        }
+        return list;
+    }
+    
+    private List<int[]> divide(int[] prefix, int val) {
+        List<int[]> list = new ArrayList<>();
+        int[] addArray = Arrays.copyOf(prefix, prefix.length + 1);
+        addArray[addArray.length - 1] = val;
+        list.add(addArray);
 //        Arrays.asList(addArray).forEach(e -> System.out.print(e+","));
 //        System.out.println("");
-//        int i = 0;
-//        for (i = 0; i < String.valueOf(val).length() - 1; i++) {
-//            int[] newArray = Arrays.copyOf(prefix, prefix.length + 1);
-//            newArray[newArray.length - 1] = Integer.parseInt(String.valueOf(val).substring(0, i + 1));
-//            int b = Integer.parseInt(String.valueOf(val).substring(i+1));
-//            list.addAll(divide(newArray, b));
-//        }
-//        return list;
-//    }
+        int i = 0;
+        for (i = 0; i < String.valueOf(val).length() - 1; i++) {
+            int[] newArray = Arrays.copyOf(prefix, prefix.length + 1);
+            newArray[newArray.length - 1] = Integer.parseInt(String.valueOf(val).substring(0, i + 1));
+            int b = Integer.parseInt(String.valueOf(val).substring(i+1));
+            list.addAll(divide(newArray, b));
+        }
+        return list;
+    }
+
+    public void calcPaterns() {
+        List<int[]> list = dividedList();
+        list.forEach(e -> {
+            int length = getMaxOperatorPattern(e.length - 1);
+            int i = 0;
+            for (i = 0; i <= length; i += 1) {
+                OptionalInt res = newcalc(e, i);
+//                if (res.isPresent()) {
+//                    System.out.println(base + " : " + target +" "+newdecode(e, i) + " = " + res.getAsInt() +"("+i+")");
+//                }
+                if (res.isPresent() && res.getAsInt() == target) {
+                    System.out.println(base + " : " +newdecode(e, i) + " = " + res.getAsInt());
+                }
+            }
+        });
+    }
+
+    private OptionalInt newcalc(int[] nums, int op) {
+        if (nums.length <= 1 || op == 0) {
+            return OptionalInt.of(nums[0]);
+        }
+        int[] ops = getOperatorArray(op, OPERATORS.length, nums.length - 1);
+//        System.out.println(Arrays.toString(ops));
+        int i = 0;
+        Optional<Tuple> tuple = Optional.of(new Tuple(nums[i], nums[i + 1], OPERATORS[ops[i]]));
+        for (i += 2; i < nums.length; i += 1) {
+            if (!tuple.isPresent()) {
+                return OptionalInt.empty();
+            }
+            tuple = priorCalc(tuple.get(), nums[i], OPERATORS[ops[i - 1]]);
+        }
+        if (!tuple.isPresent()) {
+            return OptionalInt.empty();
+        }
+        return innerCalc(tuple.get());
+    }
+
+    private String newdecode(int[] nums, int op) {
+//        char[] nums = String.valueOf(Integer.toString(val)).toCharArray();
+        int[] ops = getOperatorArray(op, OPERATORS.length, nums.length - 1);
+        StringBuffer str = new StringBuffer();
+        int i = 0;
+        for (i = 0; i < nums.length - 1; i += 1) {
+            str.append(nums[i]);
+            switch (OPERATORS[ops[i]]) {
+            case ADD :
+                str.append(" + ");
+                break;
+            case MIN :
+                str.append(" - ");
+                break;
+            case MUL :
+                str.append(" * ");
+                break;
+            case DIV :
+                str.append(" / ");
+                break;
+//            case NONE :
+            default :
+            }
+        }
+        str.append(nums[i]);
+        return str.toString();
+    }
     
     private int[] divide() {
         return divide(this.base);
@@ -114,6 +183,7 @@ public class Combination {
             return OptionalInt.of(nums[0]);
         }
         int[] ops = getOperatorArray(op, OPERATORS.length, nums.length - 1);
+        System.out.println(Arrays.toString(ops));
         int i = 0;
         Optional<Tuple> tuple = Optional.of(new Tuple(nums[i], nums[i + 1], OPERATORS[ops[i]]));
         for (i += 2; i < nums.length; i += 1) {
@@ -127,8 +197,9 @@ public class Combination {
         }
         return innerCalc(tuple.get());
     }
-    
 
+    
+    
     private class Tuple {
         private int val1;
         private OPERATOR op1;
@@ -142,7 +213,7 @@ public class Combination {
     }
     
     private enum OPERATOR {
-        NONE,
+//        NONE,
         ADD,
         MIN,
         MUL,
@@ -152,10 +223,11 @@ public class Combination {
     private static final OPERATOR[] OPERATORS = OPERATOR.values();
     
     private Optional<Tuple> priorCalc(Tuple tuple, int val3, OPERATOR op2) {
-        if (tuple.op1 == OPERATOR.NONE) {
-            OptionalInt tmp = innerCalc(tuple);
-            return (tmp.isPresent()) ? Optional.of(new Tuple(tmp.getAsInt(), val3, op2)) : Optional.empty();
-        } else if (op2 == OPERATOR.NONE || op2 == OPERATOR.MUL || op2 == OPERATOR.DIV) {
+//        if (tuple.op1 == OPERATOR.NONE) {
+//            OptionalInt tmp = innerCalc(tuple);
+//            return (tmp.isPresent()) ? Optional.of(new Tuple(tmp.getAsInt(), val3, op2)) : Optional.empty();
+//        } else if (op2 == OPERATOR.NONE || op2 == OPERATOR.MUL || op2 == OPERATOR.DIV) {
+        if ( op2 == OPERATOR.MUL || op2 == OPERATOR.DIV) {
 //            return new Tuple(tuple.val1, innerCalc(tuple.val2, val3, op2), tuple.op1);
             OptionalInt tmp = innerCalc(tuple.val2, val3, op2);
             return (tmp.isPresent()) ? Optional.of(new Tuple(tuple.val1, tmp.getAsInt(), tuple.op1)) : Optional.empty();
@@ -170,11 +242,12 @@ public class Combination {
     }
     
     private OptionalInt innerCalc(int val1, int val2, OPERATOR op) {
+//        System.out.println(val1+"&"+val2+"by"+op);
         switch (op) {
-        case NONE :
-            StringBuffer sb = new StringBuffer();
-            sb.append(String.valueOf(val1)).append(String.valueOf(val2));
-            return OptionalInt.of(Integer.parseInt(sb.toString()));
+//        case NONE :
+//            StringBuffer sb = new StringBuffer();
+//            sb.append(String.valueOf(val1)).append(String.valueOf(val2));
+//            return OptionalInt.of(Integer.parseInt(sb.toString()));
         case ADD :
             return OptionalInt.of(val1 + val2);
         case MIN :
@@ -207,7 +280,7 @@ public class Combination {
             case DIV :
                 str.append(" / ");
                 break;
-            case NONE :
+//            case NONE :
             default :
             }
         }
@@ -220,6 +293,7 @@ public class Combination {
         int i = 1; // i=0の時は四則演算無しだから
         for (i = 1; i <= operatorsMax; i += 1) {
             OptionalInt res = calc(base, i);
+            System.out.println(base + " : " + target +" "+decode(this.base, i) + " = " + res.getAsInt() +"("+i+")");
             if (res.isPresent() && res.getAsInt() == target) {
                 System.out.println(base + " : " +decode(this.base, i) + " = " + res.getAsInt());
             }
@@ -229,11 +303,14 @@ public class Combination {
     
     
     public static void main(String[] args) {
-        int i = 10;
+        int i = 1000;
         for (; i < 10000; i ++) {
           Combination c = new Combination(i);
-          c.calcAllPatern();
+          c.calcPaterns();
         }
+//      Combination c2 = new Combination(5931);
+//      System.out.println(c2.calc(c2.base, 90));
+//      c2.calcPaterns();
 //        IntStream.range(1000, 10000).forEach(i -> {
 //            Combination c = new Combination(i);
 //            c.calcAllPatern();
