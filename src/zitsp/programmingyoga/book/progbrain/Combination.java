@@ -10,6 +10,8 @@ public class Combination {
  * @author zitsp
  * "プログラマ脳を鍛える数学パズル - 増井敏克"　より
  * p.13 Q02:四則演算と一致する逆文
+ * int型での走査なので基本的にdivideはうまくいかない
+ * 1000 ~ 9999でなくても実行できる
  */
     
     private final int target;
@@ -205,6 +207,8 @@ public class Combination {
             case DIV :
                 str.append(" / ");
                 break;
+            case NONE :
+            default :
             }
         }
         str.append(nums[i]);
@@ -225,7 +229,7 @@ public class Combination {
     
     
     public static void main(String[] args) {
-        int i = 1000;
+        int i = 10;
         for (; i < 10000; i ++) {
           Combination c = new Combination(i);
           c.calcAllPatern();
